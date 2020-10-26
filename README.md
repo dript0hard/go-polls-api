@@ -6,9 +6,9 @@
     go run cmd/migrations/main.go
 `
 
-#TODO
-    - Routing.
-    - Handlers  (code logic making cruds.)
-    - Database operations. (code logic in terms of database operations.)
-    - Configuration (DB, prod/dev, ports)
-    - Figure out Serialization.
+# TODO
+    * Routing.
+    * Handlers  (code logic making cruds.).
+    * Database operations. (code logic in terms of database operations.).
+    * Configuration (DB, prod/dev, ports).
+    * Figure out Serialization.
