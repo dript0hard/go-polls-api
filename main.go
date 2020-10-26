@@ -1,10 +1,10 @@
 package main
 
 import (
-    "log"
-    "net/http"
+	"log"
+	"net/http"
 )
 
 func main() {
-    log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
