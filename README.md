@@ -1,10 +1,8 @@
 ## This is a simple implementation of Djangos Polls rest api written in golang.
 
 # To run this.
-`
-    source utils/setenv.sh
-    go run cmd/migrations/main.go
-`
+    * ` source utils/setenv.sh `
+    * ` go run cmd/migrations/main.go `
 
 # TODO
     * Routing.
