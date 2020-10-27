@@ -37,6 +37,7 @@ type Choice struct {
 }
 
 type Vote struct {
+    BaseSchema
     ChoiceID uuid.UUID
     Choice   Choice
     PollID   uuid.UUID
