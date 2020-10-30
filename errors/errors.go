@@ -1,9 +1,10 @@
 package errors
 
 import (
-    "net/http"
-    "github.com/go-chi/render"
+	"github.com/go-chi/render"
+	"net/http"
 )
+
 type ErrResponse struct {
 	Err            error `json:"-"` // low-level runtime error
 	HTTPStatusCode int   `json:"-"` // http response status code

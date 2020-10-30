@@ -1,15 +1,15 @@
 package handlers
 
 import (
-    "errors"
-    "net/http"
+	"errors"
+	"net/http"
 
-    "github.com/go-chi/chi"
-    "github.com/go-chi/render"
-    "github.com/dript0hard/pollsapi/models"
-    pollserrors "github.com/dript0hard/pollsapi/errors"
-    "github.com/dript0hard/pollsapi/utils/password"
-    "github.com/dript0hard/pollsapi/database"
+	"github.com/dript0hard/pollsapi/database"
+	pollserrors "github.com/dript0hard/pollsapi/errors"
+	"github.com/dript0hard/pollsapi/models"
+	"github.com/dript0hard/pollsapi/utils/password"
+	"github.com/go-chi/chi"
+	"github.com/go-chi/render"
 )
 
 func AuthRouter() chi.Router {
@@ -21,7 +21,7 @@ func AuthRouter() chi.Router {
 
 	r.Post("/register", registerHandler)
 
-    return r
+	return r
 }
 
 type AuthUserRequest struct {
@@ -30,15 +30,15 @@ type AuthUserRequest struct {
 
 func (authUser *AuthUserRequest) Bind(r *http.Request) error {
 
-    if authUser.Username == "" {
+	if authUser.Username == "" {
 		return errors.New("Missing username.")
 	}
 
-    if authUser.Password == "" {
+	if authUser.Password == "" {
 		return errors.New("Missing password.")
 	}
 
-    if authUser.Email == "" {
+	if authUser.Email == "" {
 		return errors.New("Missing email.")
 	}
 
@@ -46,7 +46,7 @@ func (authUser *AuthUserRequest) Bind(r *http.Request) error {
 }
 
 type AuthUserResponse struct {
-    *models.User
+	*models.User
 	JwtToken string `json:"jwt_token"`
 }
 
@@ -55,23 +55,23 @@ func NewAuthUserReponse(user *models.User) *AuthUserResponse {
 }
 
 func (aur *AuthUserResponse) Render(w http.ResponseWriter, r *http.Request) error {
-    // delete(aur.Password, string)
+	// delete(aur.Password, string)
 	return nil
 }
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
-    data := &AuthUserRequest{}
-    if err := render.Bind(r, data); err != nil {
-        render.Render(w, r, pollserrors.ErrInvalidRequest(err))
-        return
-    }
-    user := data.User
-    hashres := password.NewPasswordSha512().HashPassword(user.Password)
-    user.Password = hashres.String()
+	data := &AuthUserRequest{}
+	if err := render.Bind(r, data); err != nil {
+		render.Render(w, r, pollserrors.ErrInvalidRequest(err))
+		return
+	}
+	user := data.User
+	hashres := password.NewPasswordSha512().HashPassword(user.Password)
+	user.Password = hashres.String()
 
-    db, _ :=  database.OpenDB()
-    db.Create(user)
+	db, _ := database.OpenDB()
+	db.Create(user)
 
-    render.Status(r, http.StatusCreated)
-    render.Render(w, r, NewAuthUserReponse(user))
+	render.Status(r, http.StatusCreated)
+	render.Render(w, r, NewAuthUserReponse(user))
 }
