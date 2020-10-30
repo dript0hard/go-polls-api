@@ -9,7 +9,7 @@ import(
 
 // BaseSchema : base struct for db structs
 type BaseSchema struct {
-	ID        uuid.UUID `gorm:"primarykey"`
+	ID        uuid.UUID `gorm:"primarykey;unique"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	DeletedAt gorm.DeletedAt `gorm:"index"`
@@ -17,8 +17,8 @@ type BaseSchema struct {
 
 type User struct {
     BaseSchema
-    Username string
-    Email    string
+    Username string `gorm:"unique"`
+    Email    string `gorm:"unique"`
     Password string
 }
 

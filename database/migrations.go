@@ -5,30 +5,33 @@ import (
     "github.com/dript0hard/pollsapi/models"
 )
 
+var(
+    modelsToMigrate []interface{} = []interface{}{
+        models.User{},
+        models.Poll{},
+        models.Choice{},
+        models.Vote{},
+    }
+)
+
 func MigrateDB(db *gorm.DB) error {
-    userErr := db.AutoMigrate(&models.User{})
+    for _, model := range modelsToMigrate {
+        err := db.AutoMigrate(model)
 
-    if userErr != nil {
-        return userErr
+        if err != nil {
+            return err
+        }
     }
+    return nil
+}
 
-    pollErr := db.AutoMigrate(&models.Poll{})
+func DropDB(db *gorm.DB) error {
+    for _, model := range modelsToMigrate{
+        err := db.Migrator().DropTable(model)
 
-    if pollErr != nil {
-        return pollErr
+        if err != nil {
+            return err
+        }
     }
-
-    choicesErr := db.AutoMigrate(&models.Choice{})
-
-    if choicesErr != nil {
-        return choicesErr
-    }
-
-    voteErr := db.AutoMigrate(&models.Vote{})
-
-    if voteErr != nil {
-        return voteErr
-    }
-
     return nil
 }

@@ -9,12 +9,23 @@ import (
 )
 
 func main() {
-    pwd := "my secret password"
+    pwd := "password"
     passwordHasher := password.NewPasswordSha512()
-    hash := passwordHasher.HashPassword(pwd)
-    fmt.Println(hash.String())
-    passHash := hash.String()
-    user := models.User{Username:"dn3i", Email:"deni1myftiu@gmail.com", Password: passHash}
+    passHash := passwordHasher.HashPassword(pwd)
+    fmt.Println(passHash.String())
+    user := models.User{Username:"d3ni", Email:"deni1myftiu@gmail.com", Password: passHash.String()}
     db, _ :=  database.OpenDB()
-    db.Create(&user)
+    if result := db.Create(&user); result.Error != nil {
+        fmt.Println(result.Error.Error())
+    }
+    // ======================================
+    // db, _ :=  database.OpenDB()
+    // user := models.User{}
+    // db.First(&user)
+    // hr := password.NewHashResult(user.Password)
+    // fmt.Printf("%#v\n ", hr)
+
+    // passwordHasher := password.NewPasswordSha512()
+    // valid := passwordHasher.ValidatePassword(pwd, hr)
+    // fmt.Printf("%#v\n ", valid)
 }

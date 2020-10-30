@@ -1,15 +1,13 @@
 package password
 
 import (
-	"bytes"
 	"crypto/sha512"
 	"encoding/base64"
 	"fmt"
 	"hash"
-	"math/rand"
+	"crypto/rand"
 	"strconv"
 	"strings"
-	"time"
 
 	"golang.org/x/crypto/pbkdf2"
 )
@@ -70,24 +68,22 @@ func NewPassword(algoRep string, hashFunc func() hash.Hash, saltSize int, keyLen
 }
 
 // This is how the salts are gonna be generated might change later.
-func genSalt() string {
+func genSalt() []byte {
     saltBytes := make([]byte, SALT_SIZE)
-    rand.Seed(time.Now().UnixNano())
     rand.Read(saltBytes)
-    return base64.StdEncoding.EncodeToString(saltBytes)
+    return saltBytes
 }
 
 func (p *Password) HashPassword(password string) *HashResult {
     // This gets a new salt.
-    saltString := genSalt()
-    salt := bytes.NewBufferString(saltString).Bytes()
-
+    salt := genSalt()
     // We create the pbkdf2 key.
     key := pbkdf2.Key([]byte(password), salt, p.Iterations, p.KeyLen, p.HashFunc)
     //  Its base64
     cipher := base64.StdEncoding.EncodeToString(key)
 
     // hash result from that.
+    saltString := base64.StdEncoding.EncodeToString(salt)
     return &HashResult{Algo: p.Algo,
                       Iterations: p.Iterations,
                       Salt: saltString,
@@ -96,7 +92,7 @@ func (p *Password) HashPassword(password string) *HashResult {
 
 func (p Password) ValidatePassword(password string, hash *HashResult) bool {
     // Use the existing salt from the saved password.
-    saltBytes := bytes.NewBufferString(hash.Salt).Bytes()
+    saltBytes, _ := base64.StdEncoding.DecodeString(hash.Salt)
 
     // Hash the given password with the salt and the hash function of choice.
     key := pbkdf2.Key([]byte(password), saltBytes, p.Iterations, p.KeyLen, p.HashFunc)
