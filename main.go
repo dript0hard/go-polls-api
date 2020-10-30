@@ -1,23 +1,27 @@
 package main
 
 import (
-	"fmt"
+    "net/http"
 
-    "github.com/dript0hard/pollsapi/models"
-    "github.com/dript0hard/pollsapi/database"
-	"github.com/dript0hard/pollsapi/utils/password"
+    "github.com/go-chi/chi"
+    "github.com/go-chi/render"
+    "github.com/dript0hard/pollsapi/handlers"
 )
 
 func main() {
-    pwd := "password"
-    passwordHasher := password.NewPasswordSha512()
-    passHash := passwordHasher.HashPassword(pwd)
-    fmt.Println(passHash.String())
-    user := models.User{Username:"d3ni", Email:"deni1myftiu@gmail.com", Password: passHash.String()}
-    db, _ :=  database.OpenDB()
-    if result := db.Create(&user); result.Error != nil {
-        fmt.Println(result.Error.Error())
-    }
+    r := chi.NewRouter()
+    r.Use(render.SetContentType(render.ContentTypeJSON))
+    r.Mount("/", handlers.AuthRouter())
+    http.ListenAndServe(":8080", r)
+    // pwd := "password"
+    // passwordHasher := password.NewPasswordSha512()
+    // passHash := passwordHasher.HashPassword(pwd)
+    // fmt.Println(passHash.String())
+    // user := models.User{Username:"d3ni", Email:"deni1myftiu@gmail.com", Password: passHash.String()}
+    // db, _ :=  database.OpenDB()
+    // if result := db.Create(&user); result.Error != nil {
+    //     fmt.Println(result.Error.Error())
+    // }
     // ======================================
     // db, _ :=  database.OpenDB()
     // user := models.User{}

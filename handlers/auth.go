@@ -19,11 +19,10 @@ func AuthRouter() chi.Router {
 		w.Write([]byte("admin: index"))
 	})
 
-	r.Get("/register", registerHandler)
+	r.Post("/register", registerHandler)
 
     return r
 }
-
 
 type AuthUserRequest struct {
 	*models.User
@@ -51,8 +50,13 @@ type AuthUserResponse struct {
 	JwtToken string `json:"jwt_token"`
 }
 
-func NewAuthUserRequest(user *models.User) *AuthUserResponse {
+func NewAuthUserReponse(user *models.User) *AuthUserResponse {
 	return &AuthUserResponse{User: user}
+}
+
+func (aur *AuthUserResponse) Render(w http.ResponseWriter, r *http.Request) error {
+    // delete(aur.Password, string)
+	return nil
 }
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
@@ -61,10 +65,13 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
         render.Render(w, r, pollserrors.ErrInvalidRequest(err))
         return
     }
-    user := models.User
-    hasherdPass := password.NewPasswordSha512().HashPassword(user.Password)
+    user := data.User
+    hashres := password.NewPasswordSha512().HashPassword(user.Password)
+    user.Password = hashres.String()
 
     db, _ :=  database.OpenDB()
     db.Create(user)
 
+    render.Status(r, http.StatusCreated)
+    render.Render(w, r, NewAuthUserReponse(user))
 }
