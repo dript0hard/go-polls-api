@@ -37,4 +37,13 @@ func ErrRender(err error) render.Renderer {
 	}
 }
 
+func ErrUserAlreadyExists(err error) render.Renderer {
+       return &ErrResponse{
+               Err:            err,
+               HTTPStatusCode: http.StatusBadRequest,
+               StatusText:     "User already exists.",
+               ErrorText:      err.Error(),
+       }
+}
+
 var ErrNotFound = &ErrResponse{HTTPStatusCode: 404, StatusText: "Resource not found."}

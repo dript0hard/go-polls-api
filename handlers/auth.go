@@ -3,13 +3,15 @@ package handlers
 import (
 	"errors"
 	"net/http"
+	"time"
 
-	"github.com/dript0hard/pollsapi/database"
-	pollserrors "github.com/dript0hard/pollsapi/errors"
-	"github.com/dript0hard/pollsapi/models"
-	"github.com/dript0hard/pollsapi/utils/password"
 	"github.com/go-chi/chi"
+	"github.com/google/uuid"
 	"github.com/go-chi/render"
+	"github.com/dript0hard/pollsapi/models"
+	"github.com/dript0hard/pollsapi/database"
+	"github.com/dript0hard/pollsapi/utils/password"
+	pollserrors "github.com/dript0hard/pollsapi/errors"
 )
 
 func AuthRouter() chi.Router {
@@ -25,7 +27,9 @@ func AuthRouter() chi.Router {
 }
 
 type AuthUserRequest struct {
-	*models.User
+    Username  string
+    Email     string
+	Password  string
 }
 
 func (authUser *AuthUserRequest) Bind(r *http.Request) error {
@@ -46,16 +50,23 @@ func (authUser *AuthUserRequest) Bind(r *http.Request) error {
 }
 
 type AuthUserResponse struct {
-	*models.User
-	JwtToken string `json:"jwt_token"`
+    CreatedAt    time.Time `json:"created_at"`
+    ID           uuid.UUID `json:"id"`
+    Username     string    `json:"username"`
+    Email        string    `json:"email"`
+	JwtToken     string    `json:"jwt_token"`
 }
 
 func NewAuthUserReponse(user *models.User) *AuthUserResponse {
-	return &AuthUserResponse{User: user}
+    return &AuthUserResponse{
+        CreatedAt: user.CreatedAt,
+        ID: user.ID,
+        Username: user.Username,
+        Email: user.Email,
+    }
 }
 
 func (aur *AuthUserResponse) Render(w http.ResponseWriter, r *http.Request) error {
-	// delete(aur.Password, string)
 	return nil
 }
 
@@ -65,13 +76,23 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		render.Render(w, r, pollserrors.ErrInvalidRequest(err))
 		return
 	}
-	user := data.User
-	hashres := password.NewPasswordSha512().HashPassword(user.Password)
-	user.Password = hashres.String()
+
+    user := models.User{
+        Username: data.Username,
+        Password: data.Password,
+        Email: data.Email,
+    }
+	hash := password.NewPasswordSha512().HashPassword(user.Password)
+	user.Password = hash.String()
 
 	db, _ := database.OpenDB()
-	db.Create(user)
+
+    err := db.Create(&user).Error
+    if err != nil {
+        render.Render(w, r, pollserrors.ErrUserAlreadyExists(err))
+        return
+    }
 
 	render.Status(r, http.StatusCreated)
-	render.Render(w, r, NewAuthUserReponse(user))
+	render.Render(w, r, NewAuthUserReponse(&user))
 }
