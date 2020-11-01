@@ -1,3 +1,5 @@
-const(
-    SECRET string = "secret"
+package congig
+
+const (
+	SECRET string = "secret"
 )
