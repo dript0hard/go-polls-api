@@ -79,10 +79,9 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 
     user := models.User{
         Username: data.Username,
-        Password: data.Password,
         Email: data.Email,
     }
-	hash := password.NewPasswordSha512().HashPassword(user.Password)
+	hash := password.NewPasswordSha512().HashPassword(data.Password)
 	user.Password = hash.String()
 
 	db, _ := database.OpenDB()
@@ -96,3 +95,41 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	render.Status(r, http.StatusCreated)
 	render.Render(w, r, NewAuthUserReponse(&user))
 }
+
+type LoginRequest struct {
+    Email     string
+	Password  string
+}
+
+func (lr *LoginRequest) Bind(r *http.Request) error {
+
+	if lr.Password == "" {
+		return errors.New("Missing password.")
+	}
+
+    if len(lr.Password) < 8 {
+		return errors.New("Password must be longer than 8 character.")
+    }
+
+	if lr.Email == "" {
+		return errors.New("Missing email.")
+	}
+
+	return nil
+}
+
+type LoginResponse struct {
+	JwtToken     string    `json:"jwt_token"`
+}
+
+func NewLoginResponse(token string) *LoginResponse {
+    return &LoginResponse{
+        JwtToken: token,
+    }
+}
+
+func (lr *LoginResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
+func loginHandler(w http.ResponseWriter, r *http.Request) {}
