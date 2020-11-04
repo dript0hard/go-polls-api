@@ -22,8 +22,8 @@ const (
 )
 
 type PasswordHasher interface {
-    HashPassword(password string) *HashResult
-    ValidatePassword(password string, hash *HashResult) bool
+	HashPassword(password string) *HashResult
+	ValidatePassword(password string, hash *HashResult) bool
 }
 
 type HashResult struct {

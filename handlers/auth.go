@@ -16,7 +16,7 @@ import (
 )
 
 var (
-    authDb, _ = database.OpenDB()
+	authDb, _ = database.OpenDB()
 )
 
 func AuthRouter() chi.Router {
@@ -36,7 +36,7 @@ type AuthUserRequest struct {
 
 func (authUser *AuthUserRequest) Bind(r *http.Request) error {
 
-    //TODO(dript0hard): Check if email is valid addr.
+	//TODO(dript0hard): Check if email is valid addr.
 
 	if authUser.Username == "" {
 		return errors.New("Missing username.")
@@ -93,7 +93,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	hash := password.NewPBKDF2PasswordSha512().HashPassword(data.Password)
 	user.Password = hash.String()
 
-    err := authDb.Create(&user).Error
+	err := authDb.Create(&user).Error
 	if err != nil {
 		render.Render(w, r, pollserrors.ErrUserAlreadyExists)
 		return
@@ -136,36 +136,36 @@ func (lr *LoginResponse) Render(w http.ResponseWriter, r *http.Request) error {
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
-    data := &LoginRequest{}
-    // check input.
-    if err := render.Bind(r, data); err != nil {
+	data := &LoginRequest{}
+	// check input.
+	if err := render.Bind(r, data); err != nil {
 		render.Render(w, r, pollserrors.ErrInvalidRequest(err))
 		return
-    }
+	}
 
-    // Verify if email is not valid or if exists in the db.
+	// Verify if email is not valid or if exists in the db.
 	user := models.User{}
 
-    dbErr := authDb.Where("email = ?", data.Email).First(&user).Error
-    if dbErr != nil {
-        if errors.Is(dbErr, gorm.ErrRecordNotFound) {
-            render.Render(w, r, pollserrors.ErrUserDoesNotExist)
-            return
-        }
-        render.Render(w, r, pollserrors.ErrInternalServerErr(dbErr))
-        return
-    }
+	dbErr := authDb.Where("email = ?", data.Email).First(&user).Error
+	if dbErr != nil {
+		if errors.Is(dbErr, gorm.ErrRecordNotFound) {
+			render.Render(w, r, pollserrors.ErrUserDoesNotExist)
+			return
+		}
+		render.Render(w, r, pollserrors.ErrInternalServerErr(dbErr))
+		return
+	}
 
-    // Verify password with the db hash.
-    hr := password.NewHashResult(user.Password)
+	// Verify password with the db hash.
+	hr := password.NewHashResult(user.Password)
 	ok := password.NewPBKDF2PasswordSha512().ValidatePassword(data.Password, hr)
-    if ok {
-        lr := NewLoginResponse("")
-        render.Status(r, http.StatusOK)
-        render.Render(w, r, lr)
-        return
-    }
-    // else you are not whu you want to become :P
-    render.Status(r, http.StatusUnauthorized)
-    render.Render(w, r, pollserrors.ErrWrongPassword)
+	if ok {
+		lr := NewLoginResponse("")
+		render.Status(r, http.StatusOK)
+		render.Render(w, r, lr)
+		return
+	}
+	// else you are not whu you want to become :P
+	render.Status(r, http.StatusUnauthorized)
+	render.Render(w, r, pollserrors.ErrWrongPassword)
 }
