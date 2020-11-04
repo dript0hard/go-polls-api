@@ -12,15 +12,17 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
+
+var (
+    authDb, _ = database.OpenDB()
 )
 
 func AuthRouter() chi.Router {
 	r := chi.NewRouter()
 
-	r.Get("/login", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("admin: index"))
-	})
-
+	r.Post("/login", loginHandler)
 	r.Post("/register", registerHandler)
 
 	return r
@@ -34,12 +36,18 @@ type AuthUserRequest struct {
 
 func (authUser *AuthUserRequest) Bind(r *http.Request) error {
 
+    //TODO(dript0hard): Check if email is valid addr.
+
 	if authUser.Username == "" {
 		return errors.New("Missing username.")
 	}
 
 	if authUser.Password == "" {
 		return errors.New("Missing password.")
+	}
+
+	if len(authUser.Password) < 8 {
+		return errors.New("Password must be longer than 8 character.")
 	}
 
 	if authUser.Email == "" {
@@ -54,10 +62,10 @@ type AuthUserResponse struct {
 	ID        uuid.UUID `json:"id"`
 	Username  string    `json:"username"`
 	Email     string    `json:"email"`
-	JwtToken  string    `json:"jwt_token"`
+	JwtToken  string    `json:"jwt_token,omitempty"`
 }
 
-func NewAuthUserReponse(user *models.User) *AuthUserResponse {
+func NewAuthUserResponse(user *models.User) *AuthUserResponse {
 	return &AuthUserResponse{
 		CreatedAt: user.CreatedAt,
 		ID:        user.ID,
@@ -81,19 +89,18 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		Username: data.Username,
 		Email:    data.Email,
 	}
-	hash := password.NewPasswordSha512().HashPassword(data.Password)
+
+	hash := password.NewPBKDF2PasswordSha512().HashPassword(data.Password)
 	user.Password = hash.String()
 
-	db, _ := database.OpenDB()
-
-	err := db.Create(&user).Error
+    err := authDb.Create(&user).Error
 	if err != nil {
-		render.Render(w, r, pollserrors.ErrUserAlreadyExists(err))
+		render.Render(w, r, pollserrors.ErrUserAlreadyExists)
 		return
 	}
 
 	render.Status(r, http.StatusCreated)
-	render.Render(w, r, NewAuthUserReponse(&user))
+	render.Render(w, r, NewAuthUserResponse(&user))
 }
 
 type LoginRequest struct {
@@ -105,10 +112,6 @@ func (lr *LoginRequest) Bind(r *http.Request) error {
 
 	if lr.Password == "" {
 		return errors.New("Missing password.")
-	}
-
-	if len(lr.Password) < 8 {
-		return errors.New("Password must be longer than 8 character.")
 	}
 
 	if lr.Email == "" {
@@ -132,4 +135,37 @@ func (lr *LoginResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
-func loginHandler(w http.ResponseWriter, r *http.Request) {}
+func loginHandler(w http.ResponseWriter, r *http.Request) {
+    data := &LoginRequest{}
+    // check input.
+    if err := render.Bind(r, data); err != nil {
+		render.Render(w, r, pollserrors.ErrInvalidRequest(err))
+		return
+    }
+
+    // Verify if email is not valid or if exists in the db.
+	user := models.User{}
+
+    dbErr := authDb.Where("email = ?", data.Email).First(&user).Error
+    if dbErr != nil {
+        if errors.Is(dbErr, gorm.ErrRecordNotFound) {
+            render.Render(w, r, pollserrors.ErrUserDoesNotExist)
+            return
+        }
+        render.Render(w, r, pollserrors.ErrInternalServerErr(dbErr))
+        return
+    }
+
+    // Verify password with the db hash.
+    hr := password.NewHashResult(user.Password)
+	ok := password.NewPBKDF2PasswordSha512().ValidatePassword(data.Password, hr)
+    if ok {
+        lr := NewLoginResponse("")
+        render.Status(r, http.StatusOK)
+        render.Render(w, r, lr)
+        return
+    }
+    // else you are not whu you want to become :P
+    render.Status(r, http.StatusUnauthorized)
+    render.Render(w, r, pollserrors.ErrWrongPassword)
+}

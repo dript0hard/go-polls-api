@@ -21,12 +21,9 @@ const (
 	PASSWORD_MIN_LENGTH uint8 = 8
 )
 
-type Password struct {
-	Algo       string
-	HashFunc   func() hash.Hash
-	SaltSize   int
-	KeyLen     int
-	Iterations int
+type PasswordHasher interface {
+    HashPassword(password string) *HashResult
+    ValidatePassword(password string, hash *HashResult) bool
 }
 
 type HashResult struct {
@@ -53,18 +50,27 @@ func NewHashResult(hashString string) *HashResult {
 	}
 }
 
-//What is going to be used for this project.split
-func NewPasswordSha512() *Password {
-	return NewPassword(ALGORITHM_HASH, sha512.New, SALT_SIZE, KEY_LEN, PBKDF2_ITERATIONS)
+type PBKDF2Password struct {
+	Algo       string
+	HashFunc   func() hash.Hash
+	SaltSize   int
+	KeyLen     int
+	Iterations int
 }
-func NewPassword(algoRep string, hashFunc func() hash.Hash, saltSize int, keyLen int, iter int) *Password {
-	return &Password{
+
+func NewPBKDF2Password(algoRep string, hashFunc func() hash.Hash, saltSize int, keyLen int, iter int) *PBKDF2Password {
+	return &PBKDF2Password{
 		Algo:       algoRep,
 		HashFunc:   hashFunc,
 		SaltSize:   saltSize,
 		KeyLen:     keyLen,
 		Iterations: iter,
 	}
+}
+
+//What is going to be used for this project.split
+func NewPBKDF2PasswordSha512() *PBKDF2Password {
+	return NewPBKDF2Password(ALGORITHM_HASH, sha512.New, SALT_SIZE, KEY_LEN, PBKDF2_ITERATIONS)
 }
 
 // This is how the salts are gonna be generated might change later.
@@ -74,7 +80,7 @@ func genSalt() []byte {
 	return saltBytes
 }
 
-func (p *Password) HashPassword(password string) *HashResult {
+func (p *PBKDF2Password) HashPassword(password string) *HashResult {
 	// This gets a new salt.
 	salt := genSalt()
 	// We create the pbkdf2 key.
@@ -90,7 +96,7 @@ func (p *Password) HashPassword(password string) *HashResult {
 		CipherText: cipher}
 }
 
-func (p Password) ValidatePassword(password string, hash *HashResult) bool {
+func (p PBKDF2Password) ValidatePassword(password string, hash *HashResult) bool {
 	// Use the existing salt from the saved password.
 	saltBytes, _ := base64.StdEncoding.DecodeString(hash.Salt)
 
@@ -99,4 +105,5 @@ func (p Password) ValidatePassword(password string, hash *HashResult) bool {
 	newCipher := base64.StdEncoding.EncodeToString(key)
 
 	return newCipher == hash.CipherText
+
 }

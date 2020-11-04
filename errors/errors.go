@@ -28,22 +28,16 @@ func ErrInvalidRequest(err error) render.Renderer {
 	}
 }
 
-func ErrRender(err error) render.Renderer {
+func ErrInternalServerErr(err error) render.Renderer {
 	return &ErrResponse{
 		Err:            err,
-		HTTPStatusCode: 422,
-		StatusText:     "Error rendering response.",
-		ErrorText:      err.Error(),
-	}
-}
-
-func ErrUserAlreadyExists(err error) render.Renderer {
-	return &ErrResponse{
-		Err:            err,
-		HTTPStatusCode: http.StatusBadRequest,
-		StatusText:     "User already exists.",
+		HTTPStatusCode: http.StatusInternalServerError,
+		StatusText:     "Something went wrong.",
 		ErrorText:      err.Error(),
 	}
 }
 
 var ErrNotFound = &ErrResponse{HTTPStatusCode: 404, StatusText: "Resource not found."}
+var ErrUserDoesNotExist = &ErrResponse{HTTPStatusCode: http.StatusUnauthorized, StatusText: "User does not exist."}
+var ErrWrongPassword = &ErrResponse{HTTPStatusCode: http.StatusUnauthorized, StatusText: "Wrong Password"}
+var ErrUserAlreadyExists = &ErrResponse{HTTPStatusCode: http.StatusBadRequest, StatusText: "User already exists"}

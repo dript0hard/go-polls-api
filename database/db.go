@@ -13,9 +13,10 @@ var (
 	dbUserName string = os.Getenv("DB_USERNAME")
 	dbPassword string = os.Getenv("DB_PASSWORD")
 	dsn        string = fmt.Sprintf("user=%s password=%s dbname=%s",
-		dbUserName, dbPassword, dbName)
+                                    dbUserName, dbPassword, dbName)
 )
 
+// This can be used by other utilites to.
 func OpenDB() (*gorm.DB, error) {
 
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
@@ -26,3 +27,6 @@ func OpenDB() (*gorm.DB, error) {
 
 	return db, nil
 }
+
+
+
