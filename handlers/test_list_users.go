@@ -14,7 +14,7 @@ import (
 )
 
 var (
-	udb, _ = database.OpenDB()
+	udb, err = database.OpenDB()
 )
 
 func Test() chi.Router {

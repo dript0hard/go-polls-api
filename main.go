@@ -18,5 +18,7 @@ func main() {
 
 	r.Mount("/", handlers.AuthRouter())
 	r.Mount("/users", handlers.Test())
+	r.Mount("/polls", handlers.PollRouter())
+
 	http.ListenAndServe(":8080", r)
 }
