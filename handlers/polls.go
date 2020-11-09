@@ -7,7 +7,6 @@ import (
 	"github.com/dript0hard/pollsapi/database"
 	pollserrors "github.com/dript0hard/pollsapi/errors"
 	"github.com/dript0hard/pollsapi/models"
-	"github.com/go-chi/chi"
 	"github.com/go-chi/render"
 	"github.com/google/uuid"
 )
@@ -15,22 +14,6 @@ import (
 var (
 	pollDb, _ = database.OpenDB()
 )
-
-func PollRouter() chi.Router {
-	r := chi.NewRouter()
-	r.Post("/", createPoll)
-	r.Get("/", listPolls)
-	r.Route("/{pollId}", func(r chi.Router) {
-		r.Get("/", getPollById)
-		r.Put("/", updatePoll)
-		r.Delete("/", deletePoll)
-		r.Route("/choices", func(r chi.Router) {
-			r.Get("/", listChoices)
-			r.Post("/{choiceId}/vote", voteChoice)
-		})
-	})
-	return r
-}
 
 type CreatePollRequest struct {
 	Question string    `json:"question"`
