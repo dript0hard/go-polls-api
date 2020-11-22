@@ -1,8 +1,8 @@
 package handlers
 
-import(
-	"net/http"
+import (
 	"errors"
+	"net/http"
 	"time"
 
 	"github.com/dript0hard/pollsapi/models"
@@ -90,4 +90,3 @@ func NewLoginResponse(token string) *LoginResponse {
 func (lr *LoginResponse) Render(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
-

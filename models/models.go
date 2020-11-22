@@ -15,6 +15,11 @@ type BaseSchema struct {
 	DeletedAt gorm.DeletedAt `gorm:"index"`
 }
 
+func (b *BaseSchema) BeforeCreate(tx *gorm.DB) error {
+	b.ID = uuid.New()
+	return nil
+}
+
 type User struct {
 	BaseSchema
 	Username string `gorm:"unique"`
@@ -27,6 +32,23 @@ type Poll struct {
 	Question string
 	UserID   uuid.UUID
 	User     User
+}
+
+func (p Poll) BeforeDelete(tx *gorm.DB) error {
+	err := tx.Table("choices").Where("poll_id = ?", p.ID).
+        Delete(&[]Choice{}).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (p *Poll) AfterDelete(tx *gorm.DB) error {
+	err := tx.Unscoped().Find(p).Error
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 type Choice struct {
@@ -42,11 +64,6 @@ type Vote struct {
 	Choice   Choice
 	PollID   uuid.UUID
 	Poll     Poll
-	UserID   uuid.UUID
+	UserID   uuid.UUID `gorm:"unique"`
 	User     User
-}
-
-func (b *BaseSchema) BeforeCreate(tx *gorm.DB) error {
-	b.ID = uuid.New()
-	return nil
 }

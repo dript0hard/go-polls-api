@@ -17,15 +17,16 @@ func PollRouter() chi.Router {
 	r := chi.NewRouter()
 	r.Post("/", createPoll)
 	r.Get("/", listPolls)
+
 	r.Route("/{pollId}", func(r chi.Router) {
 		r.Get("/", getPollById)
 		r.Put("/", updatePoll)
 		r.Delete("/", deletePoll)
+
 		r.Route("/choices", func(r chi.Router) {
 			r.Get("/", listChoices)
-			r.Post("/{choiceId}/vote", voteChoice)
+			r.Post("/{choiceId}", voteChoice)
 		})
 	})
 	return r
 }
-

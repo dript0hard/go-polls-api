@@ -37,7 +37,23 @@ func ErrInternalServerErr(err error) render.Renderer {
 	}
 }
 
-var ErrNotFound = &ErrResponse{HTTPStatusCode: 404, StatusText: "Resource not found."}
-var ErrUserDoesNotExist = &ErrResponse{HTTPStatusCode: http.StatusUnauthorized, StatusText: "User does not exist."}
-var ErrWrongPassword = &ErrResponse{HTTPStatusCode: http.StatusUnauthorized, StatusText: "Wrong Password"}
-var ErrUserAlreadyExists = &ErrResponse{HTTPStatusCode: http.StatusBadRequest, StatusText: "User already exists"}
+var (
+
+    ErrNotFound = &ErrResponse{
+        HTTPStatusCode: 404, StatusText: "Resource not found."}
+    ErrPollDoesNotExist = &ErrResponse{
+                    HTTPStatusCode: http.StatusNotFound,
+                    StatusText: "Poll does not exist."}
+    ErrChoiceDoesNotExist = &ErrResponse{
+                    HTTPStatusCode: http.StatusNotFound,
+                    StatusText: "Choice does not exist."}
+    ErrUserDoesNotExist = &ErrResponse{
+                    HTTPStatusCode: http.StatusUnauthorized,
+                    StatusText: "User does not exist."}
+    ErrWrongPassword = &ErrResponse{
+                    HTTPStatusCode: http.StatusUnauthorized,
+                    StatusText: "Wrong Password"}
+    ErrUserAlreadyExists = &ErrResponse{
+                    HTTPStatusCode: http.StatusBadRequest,
+                    StatusText: "User already exists"}
+)
